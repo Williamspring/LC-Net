@@ -138,6 +138,7 @@ class LCM(nn.Module):
 
         context_mask = wg*input_conv
 
+        #squeeze
         gc_input = F.adaptive_avg_pool2d(x, (1, 1))+ F.adaptive_avg_pool2d(context_mask, (1, 1))
 
         se = self.muti_conv(gc_input)
