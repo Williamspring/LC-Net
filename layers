@@ -1,0 +1,80 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class conv_block(nn.Module):
+    def __init__(self, ch_in, ch_out):
+        super(conv_block, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
+            nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(ch_out, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
+            nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        x = self.conv(x)
+        return x
+
+
+class up_conv(nn.Module):
+    def __init__(self, ch_in, ch_out):
+        super(up_conv, self).__init__()
+        self.up = nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv2d(ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
+            nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        x = self.up(x)
+        return x
+
+
+class LCM(nn.Module):
+    def __init__(self,in_ch,ratio=2,gama =0.2):
+
+        super(LCM,self).__init__()
+
+        self.conv0 = nn.Conv2d(in_ch,in_ch,1,1)
+        self.conv1 = nn.Conv2d(in_ch,1,1)
+        self.conv2 = nn.Conv2d(in_ch,in_ch,1,1)
+
+
+        self.muti_conv = nn.Sequential(
+            nn.Conv2d(in_ch,in_ch//ratio,1),
+            nn.BatchNorm2d(in_ch//ratio),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_ch//ratio,in_ch,1),
+            nn.Sigmoid(),
+        )
+        self.softmax = nn.Softmax(dim=-1)
+        self.gamma = gama
+
+    def forward(self, x,label):
+        b, c, h, w = x.size()
+        y = F.adaptive_avg_pool2d(label, (h, w))
+        y = y.expand_as(x)
+        g = F.adaptive_avg_pool2d(y, (1, 1))
+
+        input_conv = self.conv0(x)
+        # input_ = x / x.max()
+        input_ = input_conv / input_conv.max()
+        gc = torch.pow((input_ - g),2)
+
+        k = gc.min()
+        wg = torch.exp(-(gc - k) / self.gamma)
+
+        context_mask = wg*input_conv
+
+        gc_input = F.adaptive_avg_pool2d(x, (1, 1))+ F.adaptive_avg_pool2d(context_mask, (1, 1))
+
+        se = self.muti_conv(gc_input)
+
+        out = x*se+context_mask
+        
+        return out
