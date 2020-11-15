@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 from layers import *
 
-class Ablation_AttU_Net(nn.Module):
+class LC_Net(nn.Module):
     def __init__(self, img_ch=3, output_ch=2):
-        super(Ablation_AttU_Net, self).__init__()
+        super(LC_Net, self).__init__()
 
         self.ms = MultiInput(img_ch,64,((96,128),(48,64)))
         # self.ms = MultiInput(img_ch,64,((128,128),(64,64)))
