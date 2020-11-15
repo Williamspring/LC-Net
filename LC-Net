@@ -6,8 +6,8 @@ class LC_Net(nn.Module):
     def __init__(self, img_ch=3, output_ch=2):
         super(LC_Net, self).__init__()
 
-        self.ms = MultiInput(img_ch,64,((96,128),(48,64)))
-        # self.ms = MultiInput(img_ch,64,((128,128),(64,64)))
+        self.ms = MultiInput(img_ch,64,((96,128),(48,64))) #for skin lesion datasets
+        # self.ms = MultiInput(img_ch,64,((128,128),(64,64)))#fro other datasets
 
         self.Maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
