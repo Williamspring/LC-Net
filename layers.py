@@ -108,8 +108,8 @@ class LCM(nn.Module):
         super(LCM,self).__init__()
 
         self.conv0 = nn.Conv2d(in_ch,in_ch,1,1)
-        self.conv1 = nn.Conv2d(in_ch,1,1)
-        self.conv2 = nn.Conv2d(in_ch,in_ch,1,1)
+        #self.conv1 = nn.Conv2d(in_ch,1,1)
+        #self.conv2 = nn.Conv2d(in_ch,in_ch,1,1)
 
 
         self.muti_conv = nn.Sequential(
